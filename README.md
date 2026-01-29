@@ -24,7 +24,7 @@ Una herramienta para análisis de video que permite seguir objetos, medir distan
 ## 📦 Instalación y Uso
 
 ### Instalación Rápida
-1. Descarga `Rastreo_de_Raton_en_campo_abierto` desde la sección [Releases](https://github.com/ZacharyIPICyT/Rastreo_de_Raton_en_campo_abierto_MacO/releases)
+1. Descarga `Rastreo_de_Raton_en_campo_abierto` desde la sección [Releases](https://github.com/ZacharyIPICyT/Rastreo_de_Raton_en_campo_abierto_MacOS/releases/tag/v1.0.0)
 2. Ejecuta el archivo (doble clic)
 3. ¡Listo! No requiere instalación
 
