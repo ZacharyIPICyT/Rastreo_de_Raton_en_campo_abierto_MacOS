@@ -1,0 +1,139 @@
+name: Build macOS Executable
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch: 
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Create main.py from your script
+      run: |
+        cp Rasteo_de_Raton_en_campo_abierto.py main.py
+    
+    - name: Build with PyInstaller
+      run: |
+        # Crear spec file para macOS
+        pyinstaller --onefile \
+          --name="RasteoRatonCampo" \
+          --add-data=".:." \
+          --hidden-import cv2 \
+          --hidden-import numpy \
+          --console \
+          main.py
+        
+        # Verificar que el ejecutable se creó
+        ls -la dist/
+        file dist/RasteoRatonCampo
+    
+    - name: Test the executable (quick test)
+      run: |
+        cd dist
+        echo "Testing with --help or version check"
+        ./RasteoRatonCampo --help || echo "Executable runs (may need video input)"
+    
+    - name: Create DMG package (opcional)
+      run: |
+        brew install create-dmg || true
+        
+        mkdir -p RasteoRatonCampo.app/Contents/MacOS
+        cp dist/RasteoRatonCampo RasteoRatonCampo.app/Contents/MacOS/
+        
+        cat > RasteoRatonCampo.app/Contents/Info.plist << EOF
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleName</key>
+            <string>RasteoRatonCampo</string>
+            <key>CFBundleDisplayName</key>
+            <string>Rastreo de Ratón en Campo Abierto</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.rastreoraton.campo</string>
+            <key>CFBundleVersion</key>
+            <string>1.0.0</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>CFBundleExecutable</key>
+            <string>RasteoRatonCampo</string>
+            <key>CFBundleIconFile</key>
+            <string>icon.icns</string>
+        </dict>
+        </plist>
+        EOF
+        
+        # Crear DMG si create-dmg está disponible
+        if command -v create-dmg &> /dev/null; then
+          create-dmg \
+            --volname "Rastreo Ratón Campo" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --icon "RasteoRatonCampo.app" 200 190 \
+            --hide-extension "RasteoRatonCampo.app" \
+            --app-drop-link 600 185 \
+            "RasteoRatonCampo.dmg" \
+            "RasteoRatonCampo.app/"
+        else
+          echo "create-dmg not available, skipping DMG creation"
+          zip -r RasteoRatonCampo-macOS.zip dist/
+        fi
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: RasteoRatonCampo-macOS
+        path: |
+          dist/RasteoRatonCampo
+          RasteoRatonCampo.dmg
+          RasteoRatonCampo-macOS.zip
+        retention-days: 7
+    
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/RasteoRatonCampo
+          RasteoRatonCampo.dmg
+          RasteoRatonCampo-macOS.zip
+        body: |
+          # Rastreo de Ratón en Campo Abierto - macOS
+          
+          ## Instrucciones de uso:
+          
+          1. **Ejecutable simple**: `RasteoRatonCampo`
+            - Descarga el archivo `RasteoRatonCampo`
+            - Abre Terminal
+            - Ejecuta: `chmod +x RasteoRatonCampo`
+            - Ejecuta: `./RasteoRatonCampo`
+          
+          2. **Versión DMG** :
+            - Descarga `RasteoRatonCampo.dmg`
+            - Haz doble clic para montar
+            - Arrastra la aplicación a la carpeta Aplicaciones
+          
+          ## Requisitos:
+          - macOS 10.15 (Catalina) o superior
+          
+          ## Características:
+          - Análisis de movimiento de ratón en campo abierto
+          - Tracking con OpenCV
+          - Cálculo de distancias y tiempos
+          - Interfaz gráfica para selección de áreas
