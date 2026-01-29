@@ -17,7 +17,6 @@ Una herramienta para análisis de video que permite seguir objetos, medir distan
 
 ## 🖥️ Requisitos del Sistema
 
-- **Sistema Operativo:** Windows 10/11 (64-bit)
 - **Memoria RAM:** 4 GB mínimo (8 GB recomendado)
 - **Espacio en disco:** 200 MB libres
 - **No requiere instalación de Python**
